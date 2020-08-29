@@ -3,8 +3,8 @@ import random
 import numpy as np
 import os
 import tensorflow as tf
-from scaler import StandardScaler, StaticFeatureScaler
-from utils import tprint, np_load
+from util.scaler import StandardScaler, StaticFeatureScaler
+from util.utils import tprint, np_load
 
 def get_one_sample(the_args):
     eta_idx, loader = the_args
@@ -28,7 +28,7 @@ class DataLoader(object):
         :param links_time_list: list idx by period_idx, element: list(list(link_idxs), list(link_moves), timespent)
         :param fe_periods: 表示dynamic_fes的第i行对应的period
         :param eta_periods: 表示links_time_list的第i行对应的period
-        """
+        """ #zc 根据preiod 映射成idx
         self.fe_period2idx = dict(zip(fe_periods, range(len(fe_periods))))
         self.eta_periods = eta_periods
         eta_period2idx = dict(zip(eta_periods, range(len(eta_periods))))
@@ -55,7 +55,7 @@ class DataLoader(object):
                 batch_sum_time.append(time_spent)
             # Each line represents how many road segments have been traveled in an order
             # to sort sparse tensor!
-            sorted_keys = rowcol2val.keys()
+            sorted_keys = rowcol2val.keys();sorted_keys = list(sorted_keys)
             sorted_keys.sort()
             batch_link_move_sp = tf.SparseTensorValue(indices=np.array(sorted_keys),
                                                       values=map(rowcol2val.get, sorted_keys),
@@ -153,8 +153,8 @@ def load_dataset(config, used_days=4, used_weeks=4, days=4, weeks=4):
 
     dynamic_fes = np_load(os.path.join(dataset_dir, 'dynamic_fes.npz'))
     eta_label = np_load(os.path.join(dataset_dir, 'eta_label.npz'))  # each row is a list, including list(link_idxs, link_move, timespent)
-    # dynamic feature normlize
-    fes, fe_periods = dynamic_fes['fes'], dynamic_fes['periods']
+    # dynamic feature normlize  zc fes(8366,300,1):每个时间段的每个segment的速度
+    fes, fe_periods = dynamic_fes['fes'], dynamic_fes['periods'] #zc a path的最小的时间路径
     scale_fes = fes[fe_periods < min(eta_label['valid_periods'])] # All samples before the valid periods can be used to scale
     scaler1 = StandardScaler(mean=scale_fes.mean(), std=scale_fes.std())
     scaler1.save(os.path.join(dataset_dir, 'scaler1.npz'))

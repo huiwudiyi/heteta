@@ -41,7 +41,7 @@ def calculate_normalized_laplacian(adj, to_tuple=True):
     :param to_tuple: bool
     :return:
     """
-    adj = sp.coo_matrix(adj)
+    adj = sp.coo_matrix(adj) #还原成矩阵
     d = np.array(adj.sum(1))
     d_inv_sqrt = np.power(d, -0.5).flatten()
     d_inv_sqrt[np.isinf(d_inv_sqrt)] = 0.
@@ -52,15 +52,15 @@ def calculate_normalized_laplacian(adj, to_tuple=True):
     return normalized_laplacian
 
 
-
+# adj + 转置(adj)  大于1 的变成1
 def get_symetric_matrix(adj):
     adj_mx = adj + adj.transpose()
     rep = np.where(adj_mx.data > 1)
     adj_mx.data[rep] = 1.
     return adj_mx
 
-
-def sort_key(x, y):
+# zc  def sort_key(x，y)
+def sort_key(x):
     if "op5" in x:
         return 1
     else:
@@ -68,7 +68,7 @@ def sort_key(x, y):
 
 def get_cheb_support(adj, K=3, to_tuple=True):
     n = adj.shape[0]
-    adj = get_symetric_matrix(adj)
+    adj = get_symetric_matrix(adj) #A + AT 如果大于1 那么就换算成1
     L = calculate_normalized_laplacian(adj, to_tuple=False)
     supports = [sp.eye(n), L]
     for i in range(K-2):
@@ -93,7 +93,7 @@ def get_model_cheb_support(adj, K=3):
     atten_supports = []
     flag = 0
     adj_keys = adj.keys()
-    adj_keys=sorted(adj_keys, sort_key)
+    adj_keys=sorted(adj_keys, key = sort_key)
     print("keys in matrix", adj_keys)
     for k in adj_keys:
         if k in ['__header__', '__version__', '__globals__']:
