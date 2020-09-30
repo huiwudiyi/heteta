@@ -13,7 +13,7 @@ def get_one_sample(the_args):
         batch_fes = np.reshape(loader.dynamic_fes[loader.fe_period2idx[period - 1]],
                                 newshape=loader.num_of_links)  # [link_num, 1]->link_num
     else:
-        fe_idxs = map(lambda x: loader.fe_period2idx[x], range(period - loader.seq_len, period))
+        fe_idxs = list(map(lambda x: loader.fe_period2idx[x], range(period - loader.seq_len, period)))
         batch_fes = np.concatenate([loader.dynamic_fes[fe_idxs], loader.static_fes],
                                     axis=2)  # [4, link_num, feature_dim]
     batch_link_move_sp, batch_sum_time = loader.period2batch[period]
@@ -58,7 +58,7 @@ class DataLoader(object):
             sorted_keys = rowcol2val.keys();sorted_keys = list(sorted_keys)
             sorted_keys.sort()
             batch_link_move_sp = tf.SparseTensorValue(indices=np.array(sorted_keys),
-                                                      values=map(rowcol2val.get, sorted_keys),
+                                                      values=list(map(rowcol2val.get, sorted_keys)),
                                                       dense_shape=[len(batch_sum_time), self.num_of_links])
             batch_sum_time = np.array(batch_sum_time)
             self.period2batch[period] = (batch_link_move_sp, batch_sum_time)
@@ -99,13 +99,13 @@ class DataLoader(object):
                         if self.seq_len:
                             if period - self.seq_len not in self.fe_period2idx:
                                 continue
-                            fe_idxs_recent = map(lambda x: self.fe_period2idx[x], range(period - self.seq_len, period))
+                            fe_idxs_recent = list(map(lambda x: self.fe_period2idx[x], range(period - self.seq_len, period)))
                         if self.days:
                             # for having few days ago dynamic data: future information
-                            fe_idxs_days = map(lambda x: self.fe_period2idx[x], range(period - oneday_periods*self.days, period, oneday_periods))
+                            fe_idxs_days = list(map(lambda x: self.fe_period2idx[x], range(period - oneday_periods*self.days, period, oneday_periods)))
                         if self.weeks:
                             # for having few weeks ago dynamic data
-                            fe_idxs_weeks = map(lambda x: self.fe_period2idx[x], range(period - oneday_periods*7*self.weeks, period, oneday_periods*7))
+                            fe_idxs_weeks = list(map(lambda x: self.fe_period2idx[x], range(period - oneday_periods*7*self.weeks, period, oneday_periods*7)))
                         if self.weeks and self.days:
                             if self.seq_len:
                                 fe_idxs = fe_idxs_weeks + fe_idxs_days + fe_idxs_recent
@@ -129,7 +129,7 @@ class DataLoader(object):
                     batch_samples.append((batch_fes, batch_link_move_sp, batch_sum_time))
                 yield batch_samples
         if self.shuffle:
-            random.shuffle(self.order)
+            random.shuffle(list(self.order))
         return _wrapper()
 
 

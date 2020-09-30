@@ -11,7 +11,7 @@ from util.data_loader import load_dataset
 from util.utils import tprint
 from model.supervisor import Supervisor
 import scipy.io as sio
-os.environ["CUDA_VISIBLE_DEVICES"] = "1"
+os.environ["CUDA_VISIBLE_DEVICES"] = "0"
 
 def main(args):
     with open(args.config) as f:
@@ -32,6 +32,8 @@ def main(args):
             tprint("Loading dataset.")
             data = load_dataset(config, used_days=days, used_weeks=weeks)
             if method in ["HetETA"]:
+                # adj : multirelational road network
+                # adj_gap_top5: the vehicle-trajectories based network
                 adj_files = ["adj.mat", "adj_gap_top5.mat"]
                 adj_mx = {}
                 for file in adj_files:
@@ -56,7 +58,7 @@ if __name__ == '__main__':
     parser = argparse.ArgumentParser()
     parser.add_argument('--config', default="data/config_HetETA_toy.yaml", type=str,
                         help='Configuration filename.')
-    parser.add_argument('--model_dir', default="data/model/HetETA_toy", type=str,
+    parser.add_argument('--model_dir', default="../model/HetETA_toy", type=str,
                         help='Save model filename.')
     parser.add_argument('--dataset_dir', default="../dataset/toy_sample", type=str,
                         help='Dataset filename.')

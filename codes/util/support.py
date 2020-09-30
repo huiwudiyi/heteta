@@ -12,10 +12,10 @@ def sparse_to_tuple(sparse_mx):
             mx = mx.tocoo()
         # to be order for sparse tensor!
         shape = mx.shape
-        flatten = float(shape[-1])*mx.row + mx.col
-        order_indices = np.argsort(flatten)
-        coords = np.vstack((mx.row[order_indices], mx.col[order_indices])).transpose()
-        values = mx.data[order_indices]
+        flatten = float(shape[-1])*mx.row + mx.col # 每一行是300个，300 ×第几行＋第几列　＝　按行数的个数
+        order_indices = np.argsort(flatten) #进行排序
+        coords = np.vstack((mx.row[order_indices], mx.col[order_indices])).transpose() # 纵轴方向上拼接，然后转置
+        values = mx.data[order_indices]  #
         return coords.astype(np.int64), values, shape
 
     if isinstance(sparse_mx, list):
@@ -42,9 +42,9 @@ def calculate_normalized_laplacian(adj, to_tuple=True):
     :return:
     """
     adj = sp.coo_matrix(adj) #还原成矩阵
-    d = np.array(adj.sum(1))
-    d_inv_sqrt = np.power(d, -0.5).flatten()
-    d_inv_sqrt[np.isinf(d_inv_sqrt)] = 0.
+    d = np.array(adj.sum(1)) #按行进行求和
+    d_inv_sqrt = np.power(d, -0.5).flatten() #将每个数进行开方，摊开
+    d_inv_sqrt[np.isinf(d_inv_sqrt)] = 0.# 将一些inf的值变成0
     d_mat_inv_sqrt = sp.diags(d_inv_sqrt)
     normalized_laplacian = sp.eye(adj.shape[0]) - adj.dot(d_mat_inv_sqrt).transpose().dot(d_mat_inv_sqrt).tocoo()
     if to_tuple:
@@ -69,13 +69,13 @@ def sort_key(x):
 def get_cheb_support(adj, K=3, to_tuple=True):
     n = adj.shape[0]
     adj = get_symetric_matrix(adj) #A + AT 如果大于1 那么就换算成1
-    L = calculate_normalized_laplacian(adj, to_tuple=False)
-    supports = [sp.eye(n), L]
+    L = calculate_normalized_laplacian(adj, to_tuple=False) # zc   I - D^-1/2 A D^-1/2
+    supports = [sp.eye(n), L]  # [I,Laplacian matrix]
     for i in range(K-2):
-        Li = 2 * (supports[-1]).dot(L).tocoo() - supports[-2]
-        supports.append(Li)
-    if to_tuple:
-        out = map(sparse_to_tuple, supports)
+        Li = 2 * (supports[-1]).dot(L).tocoo() - supports[-2] # 2 * L * L  - I
+        supports.append(Li) #
+    if to_tuple: #python3 必须 加上tuple
+        out = tuple(map(sparse_to_tuple, supports)) #
     else:
         out = supports
     return out
@@ -101,7 +101,7 @@ def get_model_cheb_support(adj, K=3):
         if not flag:
             supports1 = adj[k]
             flag = 1
-        elif "adj" in k:
+        elif "adj" in k:  #
             supports1 += adj[k]
         else:
             if flag == 1:
@@ -109,10 +109,10 @@ def get_model_cheb_support(adj, K=3):
                 flag = 2
             else:
                 supports2 += adj[k]
-        atten_supports.append(sparse_to_tuple(adj[k]))
+        atten_supports.append(sparse_to_tuple(adj[k]))# 数据进行平坦id的装置， 数据值， shape
         if "op5" not in k:
             """the transpose matrix of this matrix has been added in preprocessing"""
-            atten_supports.append(sparse_to_tuple(adj[k].transpose()))
+            atten_supports.append(sparse_to_tuple(adj[k].transpose())) #转置
     supports1 = get_cheb_support(supports1, K=K)
     supports2 = get_cheb_support(supports2, K=K)
     supports = supports1 + supports2

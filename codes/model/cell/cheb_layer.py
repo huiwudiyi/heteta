@@ -7,7 +7,7 @@ import numpy as np
 import tensorflow as tf
 from model.util.layers import Layer, MultiAttentionCheb
 
-
+# batch size normal
 class NormLayer(Layer):
     def __init__(self, n, dim, **kwargs):
         super(NormLayer, self).__init__(**kwargs)
@@ -27,7 +27,7 @@ class NormLayer(Layer):
         mu, sigma = tf.nn.moments(inputs, axes=[2, 3], keep_dims=True)
         return (inputs - mu) / tf.sqrt(sigma + 1e-6) * self.gamma + self.beta
 
-
+#
 class TemporalConvLayer(Layer):
     def __init__(self, Kt, input_dim, output_dim, act_func='relu', **kwargs):
         """
@@ -67,7 +67,7 @@ class TemporalConvLayer(Layer):
         else:
             x_input = inputs
         # keep the original input for residual connection.
-        x_input = x_input[:, self.Kt - 1:seq_len, :, :]
+        x_input = x_input[:, self.Kt - 1:seq_len, :, :]#
         # x_conv -> [batch_size, seq_len-Kt+1, n, output_dim]
         x_conv = tf.nn.conv2d(inputs, self.wt, strides=[1, 1, 1, 1], padding='VALID') + self.bt
         if self.act_func == 'GLU':
@@ -82,7 +82,7 @@ class TemporalConvLayer(Layer):
         else:
             raise ValueError('ERROR: activation function "%s" is not defined.' % self.act_func)
 
-
+#
 class SpatioConvLayerCheb(Layer):
     def __init__(self, Ks, input_dim, output_dim, supports, atten_supports, heads_num, **kwargs):
         """
@@ -122,7 +122,7 @@ class SpatioConvLayerCheb(Layer):
         x_gc = tf.stack(batch_gconv) # batch_size*seq_len, num_nodes, output_dim]
         x_gc = tf.reshape(x_gc, [batch_size, seq_len, n, self.output_dim])
         return tf.nn.relu(x_gc + x_input)
-
+#
 class STConvBlock(Layer):
     def __init__(self, Ks, Kt, num_nodes, supports, atten_supports, road_num, car_num, scope, channels, dropout, heads_num, act_func='GLU', **kwargs):
         """
@@ -186,7 +186,7 @@ class STConvBlock(Layer):
         return tf.nn.dropout(x, 1 - self.dropout)
 
 
-
+#
 class STLastLayer(Layer):
     def __init__(self, seq_len, n, dim, act_func='GLU', scope='last_layer', **kwargs):
         super(STLastLayer, self).__init__(**kwargs)
@@ -234,7 +234,7 @@ class STOutputEmbeddingLayer(Layer):
         x = self.norm_layer(x)
         x = self.temporal_layer2(x)
         return x
-
+#
 class STPredictLayer(Layer):
     def __init__(self, n, dim, hidden_dim, **kwargs):
         super(STPredictLayer, self).__init__(**kwargs)
